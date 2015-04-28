@@ -5,18 +5,21 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 
 
 public class BrokenActivity extends Activity {
 
+    public static String EXTRA_MESSAGE;
     private EditText auntEdith;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_broken);
-        EditText auntEdit = (EditText)findViewById(R.id.edittext);
+        //EditText auntEdit = (EditText)findViewById(R.id.edittext);
+        auntEdith = (EditText) findViewById(R.id.editText);
     }
 
 
@@ -39,14 +42,16 @@ public class BrokenActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void brokenFunction(){
+    public void brokenFunction(View view){
         //I was once, perhaps, possibly a functioning function
-        if (auntEdith.getText().toString().equals("Timmy")){
+        String textInput = auntEdith.getText().toString();
+
+        if (textInput.equals("Timmy")){
             System.out.println("Timmy fixed a bug!");
         }
 
         System.out.println("If this appears in your console, you fixed a bug.");
-        Intent intent = new Intent(this,AnotherBrokenActivity.class);
+        Intent intent = new Intent(this, AnotherBrokenActivity.class);
         String message = "This string will be passed to the new activity";
         startActivity(intent);
     }

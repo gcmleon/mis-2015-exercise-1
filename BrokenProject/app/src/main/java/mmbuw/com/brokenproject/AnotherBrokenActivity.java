@@ -1,11 +1,19 @@
 package mmbuw.com.brokenproject;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebView;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -13,13 +21,26 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 
 import mmbuw.com.brokenproject.R;
 
 public class AnotherBrokenActivity extends Activity {
+
+    private EditText userInput;
+    private TextView responseText;
+    private WebView webResponse;
+    private String responseAsString;
+    private String message;
+
+    private static final String TAG = "AnotherBrokenActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,11 +49,18 @@ public class AnotherBrokenActivity extends Activity {
 
         Intent intent = getIntent();
         String message = intent.getStringExtra(BrokenActivity.EXTRA_MESSAGE);
-        //What happens here? What is this? It feels like this is wrong.
-        //Maybe the weird programmer who wrote this forgot to do something?
+
+        userInput = (EditText) findViewById(R.id.editText2);
+
+        responseText = (TextView) findViewById(R.id.serverResponse);
+        responseText.setMovementMethod(new ScrollingMovementMethod());
+
+        webResponse = (WebView) findViewById(R.id.webDisplay);
+        webResponse.getSettings().setJavaScriptEnabled(true);
+        webResponse.setVerticalScrollBarEnabled(true);
+        webResponse.setHorizontalScrollBarEnabled(true);
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -55,33 +83,89 @@ public class AnotherBrokenActivity extends Activity {
 
     public void fetchHTML(View view) throws IOException {
 
-        //According to the exercise, you will need to add a button and an EditText first.
-        //Then, use this function to call your http requests
-        //Following hints:
-        //Android might not enjoy if you do Networking on the main thread, but who am I to judge?
-        //An app might not be allowed to access the internet without the right (*hinthint*) permissions
-        //Below, you find a staring point for your HTTP Requests - this code is in the wrong place and lacks the allowance to do what it wants
-        //It will crash if you just un-comment it.
+        // Thread for networking
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String requestedURL = userInput.getText().toString();
+                System.out.println("The user wrote: "+ requestedURL);
+                try {
+                    // Beginning of helper code for HTTP Request.
+                    HttpParams httpParameters = new BasicHttpParams();
+                    // In case of timeout, the limit is 5 seconds
+                    HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
+                    HttpClient client = new DefaultHttpClient(httpParameters);
+                    //HttpResponse response = client.execute(new HttpGet("http://lmgtfy.com/?q=android+ansync+task"));
+                    HttpResponse response = client.execute(new HttpGet(requestedURL));
+                    StatusLine status = response.getStatusLine();
 
-        /*
-        Beginning of helper code for HTTP Request.
+                    if (status.getStatusCode() == HttpStatus.SC_OK) {
+                        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+                        response.getEntity().writeTo(outStream);
+                        responseAsString = outStream.toString();
+                        System.out.println("Response string: " + responseAsString);
 
-        HttpClient client = new DefaultHttpClient();
-        HttpResponse response = client.execute(new HttpGet("http://lmgtfy.com/?q=android+ansync+task"));
-        StatusLine status = response.getStatusLine();
-        if (status.getStatusCode() == HttpStatus.SC_OK){
-            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-            response.getEntity().writeTo(outStream);
-            String responseAsString = outStream.toString();
-             System.out.println("Response string: "+responseAsString);
-        }else {
-            //Well, this didn't work.
-            response.getEntity().getContent().close();
-            throw new IOException(status.getReasonPhrase());
-        }
+                        // The view can only be accessed on the UI thread
+                        AnotherBrokenActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Display as plain text
+                                responseText.setText(responseAsString);
+                            }
+                        });
 
-          End of helper code!
+                    } else {
+                        //Well, this didn't work.
+                        response.getEntity().getContent().close();
+                        throw new IOException(status.getReasonPhrase());
+                    }
+                } catch (ConnectException exception) {
+                    // Connection refused
+                    toastMessage("ConnectException", exception.getMessage());
+                } catch (UnknownHostException exception) {
+                    // Unable to resolve host
+                    toastMessage("UnknownHostException", exception.getMessage());
+                } catch (IOException exception) {
+                    // Connection time out, server failed to respond, authorization required
+                    toastMessage("IOException", exception.getMessage());
+                } catch (OutOfMemoryError exception) {
+                    // e.g. link to a big executable file download
+                    toastMessage("OutOfMemoryError", exception.getMessage());
+                }
+                catch (Exception exception) {
+                    // Other errors
+                    toastMessage(exception.getClass().toString(), exception.getMessage());
+                }
+            }
+        }).start();
+    }
 
-                  */
+    // Display of exception errors with Toast
+    public void toastMessage(String exceptionName, String exceptionMessage) {
+
+        message = "An error of " + exceptionName + " occurred:\n " + exceptionMessage;
+
+        AnotherBrokenActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Context context = getApplicationContext();
+                int duration = Toast.LENGTH_LONG;
+                Log.e(TAG, message);
+                message = message + "\nCheck log for more information.";
+                Toast toast = Toast.makeText(context, message, duration);
+                toast.show();
+            }
+        });
+
+    }
+
+    // Bonus task: display of server response with web view for proper images, HTML, etc
+    public void webDisplay(View view) {
+        String requestedURL = userInput.getText().toString();
+
+        System.out.println("The user wrote: "+ requestedURL);
+        responseText.setText(" ");
+
+        webResponse.loadUrl(requestedURL);
     }
 }

@@ -8,20 +8,56 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context="mmbuw.com.brokenproject.AnotherBrokenActivity">
 
-    <TextView
-        android:id="@+id/brokenTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:text="If you see this, you maybe fixed a bug! Or two."
+    <EditText
+        android:id="@+id/editText2"
+        android:hint="Enter target URL"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentLeft="true" />
+
+    <LinearLayout
+        android:id="@+id/lilayout"
+        android:layout_below="@id/editText2"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:text="Connect"
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="fetchHTML"
+            android:layout_below="@+id/editText2"/>
+
+        <Button
+            android:text="Bonus"
+            android:id="@+id/buttonBonus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="webDisplay"/>
+
+        </LinearLayout>
 
     <TextView
-        android:layout_below="@+id/brokenTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:text="\n This view doesn't do anything really."
+        android:id="@+id/serverResponse"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lilayout"
+        android:layout_centerHorizontal="true"
+        android:maxLines="100"
+        android:scrollbars="vertical"/>
+
+    <WebView
+        android:id="@+id/webDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/serverResponse"
+        android:layout_centerHorizontal="true">
+
+        </WebView>
+
 
 </RelativeLayout>
